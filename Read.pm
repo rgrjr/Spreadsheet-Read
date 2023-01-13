@@ -456,18 +456,23 @@ sub _missing_parser {
     } # _missing_parser
 
 sub _txt_is_xml {
-    # Return true if $txt contains XML.  If $ns_uri_of_interest is also passed,
-    # $txt should contain it in the first 1000 or so characters (but we try to
-    # search quickly rather than precisely).
+    # Return true if $txt is gzipped or contains XML.  If we are also passed
+    # $ns_uri_of_interest, $txt must contain it in the first 1000 or so
+    # characters (but we try to search quickly rather than precisely).
     my ($txt, $ns_uri_of_interest) = @_;
 
     if (ref ($txt)) {
 	# Can't tell (unless we assume the stream is seekable).
 	return;
 	}
-    elsif ($txt =~ m/^<\?xml/) {
+    elsif ($txt =~ m/\A\037\213/) {
+	# Literal gzipped string (/usr/share/misc/magic).  [this is a hack that
+	# works only because Gnumeric is the only format that uses gzip.  --
+	# rgr, 13-Jan-23.]
+	return 1;
+	}
+    elsif ($txt =~ m/\A<\?xml/) {
 	return 1 unless $ns_uri_of_interest;
-	# Look for the URI in the first 1K.
 	$ns_uri_of_interest =~ s/([^\w\d])/\\$1/g;
 	my $prefix = length ($txt) > 10000 ? substr ($txt, 0, 1000) : $txt;
 	return $prefix =~ /xmlns:\w+=.$ns_uri_of_interest/;
