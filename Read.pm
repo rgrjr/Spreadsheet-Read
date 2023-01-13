@@ -64,6 +64,7 @@ my @parsers = (
     [ xlsx => "Spreadsheet::XLSX",			"0.13"		],
 #   [ prl  => "Spreadsheet::Perl",			""		],
     [ sc   => "Spreadsheet::Read",			"0.01"		],
+    [ gnumeric => 'Spreadsheet::ReadGnumeric',		"0.1"		],
 
     [ zzz1 => "Z10::Just::For::Testing",		"1.23"		],
     [ zzz2 => "Z20::Just::For::Testing",		""		],
