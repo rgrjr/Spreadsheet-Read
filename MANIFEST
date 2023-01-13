@@ -28,6 +28,7 @@ files/empty.txt
 files/empty.xls
 files/empty.xlsx
 files/example.xlsx
+files/gnumeric.xml
 files/macosx.csv
 files/macosx.xls
 files/merged.ods
@@ -120,4 +121,5 @@ t/623_misc.t
 t/624_dates.t
 t/625_perc.t
 t/627_merged.t
+t/700_gnumeric.t
 t/999_fail.t

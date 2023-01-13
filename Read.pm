@@ -455,6 +455,31 @@ sub _missing_parser {
     "No parser for $type found$suggest\n";
     } # _missing_parser
 
+sub _txt_is_xml {
+    # Return true if $txt contains XML.  If $ns_uri_of_interest is also passed,
+    # $txt should contain it in the first 1000 or so characters (but we try to
+    # search quickly rather than precisely).
+    my ($txt, $ns_uri_of_interest) = @_;
+
+    if (ref ($txt)) {
+	# Can't tell (unless we assume the stream is seekable).
+	return;
+	}
+    elsif ($txt =~ m/^<\?xml/) {
+	return 1 unless $ns_uri_of_interest;
+	# Look for the URI in the first 1K.
+	$ns_uri_of_interest =~ s/([^\w\d])/\\$1/g;
+	my $prefix = length ($txt) > 10000 ? substr ($txt, 0, 1000) : $txt;
+	return $prefix =~ /xmlns:\w+=.$ns_uri_of_interest/;
+	}
+    else {
+	open (my $in, '<', $txt)
+	    or return;
+	read($in, my $block, 1000) or return;
+	return _txt_is_xml ($block, $ns_uri_of_interest);
+	}
+    }
+
 sub ReadData {
     my $txt = shift	or  return;
 
@@ -1205,6 +1230,18 @@ sub ReadData {
 	return _clipsheets \%opt, [ @data ];
 	}
 
+    if ($opt{parser} ? _parser ($opt{parser}) eq "gnumeric"
+		     : _txt_is_xml ($txt, 'http://www.gnumeric.org/v10.dtd')) {
+	$can{gnumeric} or croak _missing_parser ("gnumeric");
+
+	ref $txt and
+	    croak ("Sorry, references as input are not supported by Spreadsheet::Gnumeric");
+
+	my $gnumeric = $can{gnumeric}->new (%parser_opts);
+	my $data = $gnumeric->parse_file ($txt);
+	return _clipsheets \%opt, $data;
+    }
+
     if ($opt{parser} ? _parser ($opt{parser}) eq "sxc"
 		     : ($txt =~ m/^<\?xml/ or -f $txt)) {
 	$can{sxc} or croak _missing_parser ("SXC");
@@ -1215,7 +1252,7 @@ sub ReadData {
 	my $using = "using $can{sxc}-" . $can{sxc}->VERSION;
 	my $sxc_options = { %parser_opts, OrderBySheet => 1 }; # New interface 0.20 and up
 	my $sxc;
-	   if ($txt =~ m/\.(sxc|ods)$/i) {
+	if ($txt =~ m/\.(sxc|ods)$/i) {
 	    $debug and print STDERR "Opening \U$1\E $txt $using\n";
 	    $debug and print STDERR __FILE__, "#", __LINE__, "\n";
 	    $sxc = Spreadsheet::ReadSXC::read_sxc      ($txt, $sxc_options) or return;
