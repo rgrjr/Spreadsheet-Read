@@ -222,7 +222,7 @@ sub parsers {
 	    mod => $mod,
 	    min => $min,
 	    vsn => $vsn,
-	    def => $can{$typ} eq $mod ? "*" : "",
+	    def => ($can{$typ} || '') eq $mod ? "*" : "",
 	    };
 	}
     @c;
@@ -241,7 +241,7 @@ sub parses {
 	$@ = $1;
 	return 0;
 	}
-    return $can{$type};
+    return $can{$type} || 0;
     } # parses
 
 sub sheets {
