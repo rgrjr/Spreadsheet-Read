@@ -12,11 +12,17 @@ my $parser = Spreadsheet::Read::parses ("gnumeric") or
 
 print STDERR "# Parser: $parser-", $parser->VERSION, "\n";
 
-for my $file (qw(files/gnumeric.xml files/gnumeric.xml)) {
+# Subroutine.
+
+sub test_source {
     # 6 tests per file version.
-    ok(Spreadsheet::Read::_txt_is_xml ($file, 'http://www.gnumeric.org/v10.dtd'),
-       "$file is Gnumeric XML");
-    my $book = ReadData($file);
+    my ($source, $source_name, @options) = @_;
+
+    ok(ref($source) ||
+       Spreadsheet::Read::_txt_is_xml
+           ($source, 'http://www.gnumeric.org/v10.dtd'),
+       "$source_name contains Gnumeric XML");
+    my $book = ReadData($source, @options);
     ok($book, "have gnumeric book");
     ok(@$book == 4, "it has length 4");
     ok($book->[0]{sheets} == 3, "it has 3 sheets");
@@ -26,4 +32,15 @@ for my $file (qw(files/gnumeric.xml files/gnumeric.xml)) {
        'cell C30 matches via array indices');
 }
 
-done_testing(2 * 6);
+### Main code.
+
+for my $file (qw(files/gnumeric.xml files/gnumeric.gnumeric)) {
+    test_source ($file, "file $file");
+    open my $in, '<', $file or die "oops: $!";
+    test_source ($in, "stream $file", parser => 'gnumeric');
+    open $in, '<', $file or die "oops again: $!";
+    my $data = do { local $/;  <$in> };
+    test_source ($data, "scalar $file");
+}
+
+done_testing(2 * 3 * 6);

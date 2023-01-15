@@ -465,24 +465,22 @@ sub _txt_is_xml {
 	# Can't tell (unless we assume the stream is seekable).
 	return;
 	}
-    elsif ($txt =~ m/\A\037\213/) {
+    if ($txt =~ m/\A\037\213/) {
 	# Literal gzipped string (/usr/share/misc/magic).  [this is a hack that
 	# works only because Gnumeric is the only format that uses gzip.  --
 	# rgr, 13-Jan-23.]
 	return 1;
 	}
-    elsif ($txt =~ m/\A<\?xml/) {
+    if ($txt =~ m/\A<\?xml/) {
 	return 1 unless $ns_uri_of_interest;
 	$ns_uri_of_interest =~ s/([^\w\d])/\\$1/g;
 	my $prefix = length ($txt) > 10000 ? substr ($txt, 0, 1000) : $txt;
 	return $prefix =~ /xmlns:\w+=.$ns_uri_of_interest/;
 	}
-    else {
-	open (my $in, '<', $txt)
-	    or return;
-	read($in, my $block, 1000) or return;
-	return _txt_is_xml ($block, $ns_uri_of_interest);
-	}
+    open (my $in, '<', $txt)
+	or return;
+    read ($in, my $block, 1000) or return;
+    return _txt_is_xml ($block, $ns_uri_of_interest);
     }
 
 sub ReadData {
@@ -1239,12 +1237,8 @@ sub ReadData {
 		     : _txt_is_xml ($txt, 'http://www.gnumeric.org/v10.dtd')) {
 	$can{gnumeric} or croak _missing_parser ("gnumeric");
 
-	ref $txt and
-	    croak ("Sorry, references as input are not supported by Spreadsheet::Gnumeric");
-
-	my $gnumeric = $can{gnumeric}->new (%parser_opts);
-	my $data = $gnumeric->parse_file ($txt);
-	return _clipsheets \%opt, $data;
+	my $gnm = $can{gnumeric}->new (%parser_opts, gzipped_p => $opt{gzipped_p});
+	return _clipsheets \%opt, $gnm->parse ($txt);
     }
 
     if ($opt{parser} ? _parser ($opt{parser}) eq "sxc"
