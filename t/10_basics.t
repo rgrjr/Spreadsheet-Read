@@ -14,13 +14,13 @@ ok (my @ext = parses (undef), "No sheet type");
 is_deeply ([ grep m/^sc/ => @ext ], [ "sc" ], "Supports Squirrelcalc");
 
 is (parses ("zzz0"), 0,				"Unknown     sheet type");
-is (parses ("zzz1"), 0,				"Too old     sheet type");
+is (parses ("zzz1") || 0, 0,			"Too old     sheet type");
 is (parses ("zzz2"), "Z20::Just::For::Testing",	"Testing     sheet type");
 is (parses ("zzz3"), 0,				"Unsupported sheet type");
 
 is (parses ("xls"), parses ("excel"),      "Excel alias type");
-is (parses ("ods"), parses ("oo"),         "OpenOffice alias type 1");
-is (parses ("ods"), parses ("OpenOffice"), "OpenOffice alias type 2");
+is (parses ("ods") || 0, parses ("oo") || 0, "OpenOffice alias type 1");
+is (parses ("ods") || 0, parses ("OpenOffice") || 0, "OpenOffice alias type 2");
 is (parses ("sc"),  parses ("scalc"),      "SquirrelCalc alias type");
 
 foreach my $x ([ "A1",              1,      1 ],

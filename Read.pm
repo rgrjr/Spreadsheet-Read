@@ -241,7 +241,7 @@ sub parses {
 	$@ = $1;
 	return 0;
 	}
-    return $can{$type} || 0;
+    return $can{$type};
     } # parses
 
 sub sheets {
